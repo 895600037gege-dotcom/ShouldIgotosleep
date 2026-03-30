@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Should I Go to Sleep Now?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #1c1624;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow: hidden;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle 3s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.12; }
+      50% { opacity: 0.75; }
+    }
+
+    .wrap {
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .moon {
+      font-size: 3.8rem;
+      display: block;
+      margin-bottom: 0.4rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .top-label {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: #c9b8e8;
+      margin-bottom: 3rem;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+
+    .message-box {
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.8rem;
+      padding: 0 0.5rem;
+    }
+
+    .message-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.45rem;
+      line-height: 1.6;
+      color: #f0e6ff;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .message-text.idle {
+      color: #9a8ab8;
+      font-size: 0.9rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 400;
+    }
+
+    .message-text.show { opacity: 1; transform: translateY(0); }
+    .message-text.out  { opacity: 0; transform: translateY(-10px); }
+
+    .btn {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #2a1f3d;
+      background: linear-gradient(135deg, #d4b8f0, #f0c8d8);
+      border: none;
+      border-radius: 100px;
+      padding: 0.95rem 2.4rem;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: transform 0.12s, box-shadow 0.4s;
+      box-shadow: 0 4px 24px #a07cc044;
+      outline: none;
+    }
+
+    .btn:hover { transform: scale(1.06); }
+    .btn:active { transform: scale(0.94); }
+
+    .counter-row {
+      margin-top: 2.2rem;
+      font-size: 0.7rem;
+      color: #6a5a88;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #2e2245;
+      transition: background 0.5s;
+    }
+
+    .dot.lit  { background: #c8a8e8; }
+    .dot.warm { background: #f0a8b8; }
+
+    .footer {
+      margin-top: 3.5rem;
+      font-size: 0.6rem;
+      color: #3a2a52;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="wrap">
+  <span class="moon">🌙</span>
+  <div class="top-label">Should I Go to Sleep Now?</div>
+
+  <div class="message-box">
+    <div class="message-text idle show" id="msg">Go on. Press the button. You know you want to.</div>
+  </div>
+
+  <button class="btn" id="mainBtn" onclick="pressIt()">I'm not tired yet</button>
+
+  <div class="counter-row">Pressed <span id="countNum">0</span> times and counting</div>
+  <div class="dots" id="dots"></div>
+
+  <div class="footer">Your future self is watching. Nervously. ✨</div>
+</div>
+
+<script>
+  const messages = [
+    { text: "Yes. Go to sleep. Goodnight.",                                          emoji: "🛏️" },
+    { text: "Still here? Bold choice. Your alarm isn't impressed.",                  emoji: "😴" },
+    { text: "You will regret this tomorrow. Not maybe. Will.",                       emoji: "🥱" },
+    { text: "At this point you're just stress-testing your own immune system.",      emoji: "😬" },
+    { text: "Your under-eye circles now have their own gravitational pull.",         emoji: "🐼" },
+    { text: "I've officially given up. This is on you now.",                         emoji: "🏳️" },
+    { text: "Scientists studying sleep deprivation have started citing you as a case study.", emoji: "🔬" },
+    { text: "Your pillow filed a missing persons report three hours ago.",           emoji: "😢" },
+    { text: "You're not living your best life. You're financing it on sleep debt.",  emoji: "⏳" },
+    { text: "Okay. Fine. Goodnight. I hope the WiFi goes down.",                     emoji: "🌟" },
+  ];
+
+  let count = 0;
+
+  function pressIt() {
+    const msgEl = document.getElementById('msg');
+    msgEl.classList.remove('show');
+    msgEl.classList.add('out');
+
+    setTimeout(() => {
+      count++;
+      document.getElementById('countNum').textContent = count;
+
+      const idx = Math.min(count - 1, messages.length - 1);
+      const m = messages[idx];
+
+      msgEl.className = 'message-text';
+      msgEl.textContent = m.emoji + '\u2002' + m.text;
+      msgEl.classList.add('show');
+
+      renderDots();
+    }, 220);
+  }
+
+  function renderDots() {
+    const dotsEl = document.getElementById('dots');
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < count && i < messages.length; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot ' + (i >= 4 ? 'warm' : 'lit');
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function makeStars() {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 55; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.2 + 0.8;
+      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${(Math.random()*3).toFixed(2)}s;animation-duration:${(2+Math.random()*3).toFixed(2)}s`;
+      container.appendChild(s);
+    }
+  }
+
+  makeStars();
+</script>
+</body>
+</html>
